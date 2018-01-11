@@ -6,14 +6,20 @@ def main(): #need to run simulation 100x
 	numOffices = 12
 	floor = makeFloor(numOffices)
 	heatMiser = HeatMiser(floor)
-	#while true - visit offices in order
-		#check office temp/hum, avg temp/hum
-		#choose/initiate action or inaction
-		#recalculate avg temp/hum
+	visits = 0
+	currentOffice = 0
+	goodConditions = False
+	while not goodConditions:
+		visits += 1
+		currentTemp = floor[0][currentOffice]
+		currentHum = floor[1][currentOffice]
+		goodConditions = makeDecision(currentTemp, currentHum)
 		#if done
 			#break loop, print stats
 		#else
 			#update office number
+			currentOffice = (currentOffice + 1) % 12
+		break
 	#print stats: office temp/hum x12, avg temp/hum & stand dev, num trials
 
 
@@ -70,6 +76,10 @@ class HeatMiser:
 		print("The floor's average humidity is", format(self.avgHum, '.2f'),\
 			"+/-", format(self.humDev, '.2f'), "percent.")
 
+	def makeDecision(self, currentTemp, currentHum):
+		i=1
+
+
 #create a simulation floor of size 12
 #index 0 is temps and index 1 is humidities, wherein each index represents in office
 def makeFloor(numOffices):
@@ -80,6 +90,7 @@ def makeFloor(numOffices):
 		print("The initial state of office", i + 1, "is:")
 		print("Temperature:", floor[0][i])
 		print("Humidity:", floor[1][i])
+	print("-------------------------------------")
 	return floor
 
 if __name__ == "__main__":
