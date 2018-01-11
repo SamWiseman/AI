@@ -2,10 +2,23 @@
 from random import *
 from statistics import *
 
-def main():
+def main(): #need to run simulation 100x
 	numOffices = 12
 	floor = makeFloor(numOffices)
 	heatMiser = HeatMiser(floor)
+	#while true - visit offices in order
+		#check office temp/hum, avg temp/hum
+		#choose/initiate action or inaction
+		#recalculate avg temp/hum
+		#if done
+			#break loop, print stats
+		#else
+			#update office number
+	#print stats: office temp/hum x12, avg temp/hum & stand dev, num trials
+
+
+	#at end of 100 sims: calculate avg num trials
+
 	heatMiser.raiseTemp(2)
 #the heatmiser class can always access the average temp and humidity and their standard devs
 #it possesses the floor matrix and accesses offices based on a given index number 
