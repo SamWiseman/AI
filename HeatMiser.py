@@ -1,31 +1,35 @@
 #HeatMiser.py
 from random import *
 from statistics import *
+from math import *
 
 def main(): #need to run simulation 100x
-	numOffices = 12
-	floor = makeFloor(numOffices)
-	heatMiser = HeatMiser(floor)
-	visits = 0
-	currentOffice = 0
-	goodConditions = False
-	while not goodConditions:
-		visits += 1
-		currentTemp = floor[0][currentOffice]
-		currentHum = floor[1][currentOffice]
-		goodConditions = makeDecision(currentTemp, currentHum)
-		#if done
-			#break loop, print stats
-		#else
-			#update office number
+	accumulatedVisits = []
+	numTrials = 100
+	for i in range(numTrials):
+		numOffices = 12
+		floor = makeFloor(numOffices)
+		heatMiser = HeatMiser(floor)
+		visits = 0
+		currentOffice = 0
+		goodConditions = False
+		while not goodConditions:
+			visits += 1
+			currentTemp = floor[0][currentOffice]
+			currentHum = floor[1][currentOffice]
+			goodConditions = heatMiser.makeDecision(currentOffice, currentTemp, currentHum)
 			currentOffice = (currentOffice + 1) % 12
-		break
-	#print stats: office temp/hum x12, avg temp/hum & stand dev, num trials
-
-
+		#print stats: office temp/hum x12, avg temp/hum & stand dev, num trials
+		for i in range(len(floor)):
+			print("Office", i + 1, "is at", floor[0][i], "degrees and",\
+			 floor[1][i], "percent humidity.")
+		heatMiser.reportFinalConditions(visits)
+		accumulatedVisits.append(visits)
 	#at end of 100 sims: calculate avg num trials
+	avgVisits = mean(accumulatedVisits)
+	visitsDev = stdev(accumulatedVisits)
+	print("Average number of visits across the trials was", avgVisits, "+/-", visitsDev, ".")
 
-	heatMiser.raiseTemp(2)
 #the heatmiser class can always access the average temp and humidity and their standard devs
 #it possesses the floor matrix and accesses offices based on a given index number 
 class HeatMiser:
@@ -41,26 +45,30 @@ class HeatMiser:
 		self.updateHumStats()
 
 	def raiseTemp(self, officeNum):
+		self.reportCurrentConditions(officeNum)
 		self.temps[officeNum] += 1
-		print("The temperature of office", officeNum+1, "has been raised by 1."\
+		print("HeatMiser raises the temperature of office", officeNum+1, "by 1."\
 		 " It is now", self.temps[officeNum], "degrees.")
 		self.updateTempStats()
 
 	def lowerTemp(self, officeNum):
+		self.reportCurrentConditions(officeNum)
 		self.temps[officeNum] -= 1
-		print("The temperature of office", officeNum+1, "has been lowered by 1."\
+		print("HeatMiser lowers the temperature of office", officeNum+1, "by 1."\
 		 " It is now", self.temps[officeNum], "degrees.")
 		self.updateTempStats()
 
 	def raiseHum(self, officeNum): 
+		self.reportCurrentConditions(officeNum)
 		self.hums[officeNum] += 1
-		print("The humidity of office", officeNum+1, "has been raised by 1."\
+		print("HeatMiser raises the humidity of office", officeNum+1, "by 1."\
 		 " It is now", self.hums[officeNum], "percent.")
 		self.updateHumStats()
 
 	def lowerHum(self, officeNum):
+		self.reportCurrentConditions(officeNum)
 		self.hums[officeNum] -= 1
-		print("The humidity of office", officeNum + 1, "has been lowered by 1."\
+		print("HeatMiser lowers the humidity of office", officeNum + 1, "by 1."\
 		 " It is now", self.hums[officeNum], "percent.")
 		self.updateHumStats()
 
@@ -76,9 +84,49 @@ class HeatMiser:
 		print("The floor's average humidity is", format(self.avgHum, '.2f'),\
 			"+/-", format(self.humDev, '.2f'), "percent.")
 
-	def makeDecision(self, currentTemp, currentHum):
-		i=1
+	def reportCurrentConditions(self, officeNum):
+		temperature = self.temps[officeNum]
+		humidity = self.hums[officeNum]
+		print("Office", officeNum,"is", temperature, "degrees and",\
+		 humidity, "percent humidity.")
 
+	def reportFinalConditions(self, visits):
+		print("The floor's final average temperature is", format(self.avgTemp, '.2f'),\
+		 "+/-", format(self.tempDev, '.2f'), "degrees.")
+		print("The floor's final average humidity is", format(self.avgHum, '.2f'),\
+			"+/-", format(self.humDev, '.2f'), "percent.")
+		print("HeatMiser made a total of", visits, "visits.")
+
+	def makeDecision(self, currentOffice, currentTemp, currentHum):
+		idealTemp = 72
+		idealHum = 47
+		tempDist = abs(idealTemp - currentTemp)
+		humDist = abs(idealHum - currentHum)
+		if humDist > tempDist: 
+			if currentHum > idealHum:
+				self.lowerHum(currentOffice)
+			elif currentHum < idealHum:
+				self.raiseHum(currentOffice)
+			else: 
+				print("HeatMiser leaves without changing anything.")
+			#	self.lowerHum(currentOffice) if self.avgHum > idealHum\
+			#	 else self.raiseHum(currentOffice)
+		else: 
+			if currentTemp > idealTemp:
+				self.lowerTemp(currentOffice)
+			elif currentTemp < idealTemp:
+				self.raiseTemp(currentOffice)
+			else:
+				print("HeatMiser leaves without changing anything.")
+			#	self.lowerTemp(currentOffice) if self.avgTemp > idealTemp\
+			#	 else self.raiseTemp(currentOffice)
+		#we can stop if the avg is within 1 of the ideal for temp and hum and stdev for both is < 1.75
+		avgTempDist = abs(idealTemp - self.avgTemp)
+		avgHumDist = abs(idealHum - self.avgHum)
+		if avgTempDist < 1 and avgHumDist < 1 and self.tempDev < 1.5 and self.humDev < 1.75:
+			return True
+		else: 
+			return False
 
 #create a simulation floor of size 12
 #index 0 is temps and index 1 is humidities, wherein each index represents in office
