@@ -3,7 +3,7 @@ from random import *
 from statistics import *
 from math import *
 
-def main(): #need to run simulation 100x
+def main(): 
 	accumulatedVisits = []
 	numTrials = 100
 	for i in range(numTrials):
@@ -87,7 +87,7 @@ class HeatMiser:
 	def reportCurrentConditions(self, officeNum):
 		temperature = self.temps[officeNum]
 		humidity = self.hums[officeNum]
-		print("Office", officeNum,"is", temperature, "degrees and",\
+		print("Office", officeNum + 1,"is", temperature, "degrees and",\
 		 humidity, "percent humidity.")
 
 	def reportFinalConditions(self, visits):
@@ -103,27 +103,28 @@ class HeatMiser:
 		tempDist = abs(idealTemp - currentTemp)
 		humDist = abs(idealHum - currentHum)
 		if humDist > tempDist: 
-			if currentHum > idealHum:
+			if currentHum >= idealHum + 1:
 				self.lowerHum(currentOffice)
 			elif currentHum < idealHum:
 				self.raiseHum(currentOffice)
 			else: 
-				print("HeatMiser leaves without changing anything.")
+				print("HeatMiser leaves without changing anything1.")
 			#	self.lowerHum(currentOffice) if self.avgHum > idealHum\
 			#	 else self.raiseHum(currentOffice)
 		else: 
-			if currentTemp > idealTemp:
+			if currentTemp >= idealTemp + 1:
 				self.lowerTemp(currentOffice)
 			elif currentTemp < idealTemp:
 				self.raiseTemp(currentOffice)
 			else:
-				print("HeatMiser leaves without changing anything.")
+				print("HeatMiser leaves without changing anything2.")
 			#	self.lowerTemp(currentOffice) if self.avgTemp > idealTemp\
 			#	 else self.raiseTemp(currentOffice)
 		#we can stop if the avg is within 1 of the ideal for temp and hum and stdev for both is < 1.75
-		avgTempDist = abs(idealTemp - self.avgTemp)
-		avgHumDist = abs(idealHum - self.avgHum)
-		if avgTempDist < 1 and avgHumDist < 1 and self.tempDev < 1.5 and self.humDev < 1.75:
+		avgTempDist = self.avgTemp - idealTemp
+		avgHumDist = self.avgHum - idealHum
+		if 0 <= avgTempDist < 1 and 0 <= avgHumDist < 1 \
+		and self.tempDev < 1.5 and self.humDev < 1.75:
 			return True
 		else: 
 			return False
