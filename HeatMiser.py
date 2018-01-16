@@ -3,6 +3,8 @@ from random import *
 from statistics import *
 from math import *
 
+
+#current avg: 123 +- 28
 def main(): 
 	accumulatedVisits = []
 	numTrials = 100
@@ -75,20 +77,24 @@ class HeatMiser:
 	def updateTempStats(self):
 		self.avgTemp = mean(self.temps)
 		self.tempDev = stdev(self.temps)
-		print("The floor's average temperature is", format(self.avgTemp, '.2f'),\
-		 "+/-", format(self.tempDev, '.2f'), "degrees.")
+		self.reportAverages()
 
 	def updateHumStats(self):
 		self.avgHum = mean(self.hums)
 		self.humDev = stdev(self.hums)
-		print("The floor's average humidity is", format(self.avgHum, '.2f'),\
-			"+/-", format(self.humDev, '.2f'), "percent.")
+		self.reportAverages()
 
 	def reportCurrentConditions(self, officeNum):
 		temperature = self.temps[officeNum]
 		humidity = self.hums[officeNum]
 		print("Office", officeNum + 1,"is", temperature, "degrees and",\
 		 humidity, "percent humidity.")
+
+	def reportAverages(self):
+		print("The floor's average temperature is", format(self.avgTemp, '.2f'),\
+		 "+/-", format(self.tempDev, '.2f'), "degrees.")
+		print("The floor's average humidity is", format(self.avgHum, '.2f'),\
+			"+/-", format(self.humDev, '.2f'), "percent.")
 
 	def reportFinalConditions(self, visits):
 		print("The floor's final average temperature is", format(self.avgTemp, '.2f'),\
@@ -108,19 +114,42 @@ class HeatMiser:
 			elif currentHum < idealHum:
 				self.raiseHum(currentOffice)
 			else: 
+				self.reportCurrentConditions(currentOffice)
 				print("HeatMiser leaves without changing anything1.")
-			#	self.lowerHum(currentOffice) if self.avgHum > idealHum\
-			#	 else self.raiseHum(currentOffice)
-		else: 
+				self.reportAverages()
+		else:#elif tempDist > humDist: 
 			if currentTemp >= idealTemp + 1:
 				self.lowerTemp(currentOffice)
 			elif currentTemp < idealTemp:
 				self.raiseTemp(currentOffice)
 			else:
+				self.reportCurrentConditions(currentOffice)
 				print("HeatMiser leaves without changing anything2.")
-			#	self.lowerTemp(currentOffice) if self.avgTemp > idealTemp\
-			#	 else self.raiseTemp(currentOffice)
-		#we can stop if the avg is within 1 of the ideal for temp and hum and stdev for both is < 1.75
+				self.reportAverages()
+		#if both temperature and humidity are "ideal..." see which avg is further from ideal and 
+		#change to help that average 
+		'''else: 
+			avgTempDist = idealTemp - self.avgTemp
+			avgHumDist = idealTemp - self.avgHum
+			if abs(avgHumDist) > abs(avgTempDist):
+				if avgHumDist < 0:
+					self.lowerHum(currentOffice)
+				elif avgHumDist > 0:
+					self.raiseHum(currentOffice)
+				else:
+					self.reportCurrentConditions(currentOffice)
+					print("HeatMiser leaves without changing anything2.")
+					self.reportAverages()
+			else:
+				if avgTempDist < 0:
+					self.lowerTemp(currentOffice)
+				elif avgTempDist > 0:
+					self.raiseHum(currentOffice)
+				else:
+					self.reportCurrentConditions(currentOffice)
+					print("HeatMiser leaves without changing anything2.")
+					self.reportAverages()'''
+		#we can stop if the avg is within .5 of .5 + the ideal for temp and hum and stdev for both is < 1.75
 		avgTempDist = self.avgTemp - idealTemp
 		avgHumDist = self.avgHum - idealHum
 		if 0 <= avgTempDist < 1 and 0 <= avgHumDist < 1 \
