@@ -9,6 +9,7 @@ def main():
 	accumulatedVisits = []
 	numTrials = 100
 	for i in range(numTrials):
+		print("----------------------NEW TRIAL----------------------")
 		numOffices = 12
 		floor = makeFloor(numOffices)
 		heatMiser = HeatMiser(floor)
@@ -22,7 +23,8 @@ def main():
 			goodConditions = heatMiser.makeDecision(currentOffice, currentTemp, currentHum)
 			currentOffice = (currentOffice + 1) % 12
 		#print stats: office temp/hum x12, avg temp/hum & stand dev, num trials
-		for i in range(len(floor)):
+		print("-------------------------------------")
+		for i in range(len(floor[0])):
 			print("Office", i + 1, "is at", floor[0][i], "degrees and",\
 			 floor[1][i], "percent humidity.")
 		heatMiser.reportFinalConditions(visits)
@@ -43,8 +45,8 @@ class HeatMiser:
 		self.tempDev = 0
 		self.avgHum = 0
 		self.humDev = 0
-		self.updateTempStats()
-		self.updateHumStats()
+		self.updateTempStats(True)
+		self.updateHumStats(True)
 
 	def raiseTemp(self, officeNum):
 		self.reportCurrentConditions(officeNum)
@@ -74,15 +76,17 @@ class HeatMiser:
 		 " It is now", self.hums[officeNum], "percent.")
 		self.updateHumStats()
 
-	def updateTempStats(self):
+	def updateTempStats(self, mute=False):
 		self.avgTemp = mean(self.temps)
 		self.tempDev = stdev(self.temps)
-		self.reportAverages()
+		if not mute:
+			self.reportAverages()
 
-	def updateHumStats(self):
+	def updateHumStats(self, mute=False):
 		self.avgHum = mean(self.hums)
 		self.humDev = stdev(self.hums)
-		self.reportAverages()
+		if not mute:
+			self.reportAverages()
 
 	def reportCurrentConditions(self, officeNum):
 		temperature = self.temps[officeNum]
@@ -115,7 +119,7 @@ class HeatMiser:
 				self.raiseHum(currentOffice)
 			else: 
 				self.reportCurrentConditions(currentOffice)
-				print("HeatMiser leaves without changing anything1.")
+				print("HeatMiser leaves without changing anything.")
 				self.reportAverages()
 		else:#elif tempDist > humDist: 
 			if currentTemp >= idealTemp + 1:
@@ -124,7 +128,7 @@ class HeatMiser:
 				self.raiseTemp(currentOffice)
 			else:
 				self.reportCurrentConditions(currentOffice)
-				print("HeatMiser leaves without changing anything2.")
+				print("HeatMiser leaves without changing anything.")
 				self.reportAverages()
 		#if both temperature and humidity are "ideal..." see which avg is further from ideal and 
 		#change to help that average 
