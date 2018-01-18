@@ -21,7 +21,7 @@ def main():
 			currentTemp = floor[0][currentOffice]
 			currentHum = floor[1][currentOffice]
 			goodConditions = heatMiser.makeDecision(currentOffice, currentTemp, currentHum)
-			currentOffice = (currentOffice + 1) % 12
+			currentOffice = (currentOffice + 1) % numOffices
 		#print stats: office temp/hum x12, avg temp/hum & stand dev, num trials
 		print("-------------------------------------")
 		for i in range(len(floor[0])):
@@ -162,7 +162,7 @@ class HeatMiser:
 		else: 
 			return False
 
-#create a simulation floor of size 12
+#create a simulation floor of given size (12 for this assignment)
 #index 0 is temps and index 1 is humidities, wherein each index represents in office
 def makeFloor(numOffices):
 	floor = [[],[]]
