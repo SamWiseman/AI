@@ -1,11 +1,13 @@
 #authors: Leila Awad and Sam Wiseman
 
+import sys
 from random import *
 from statistics import *
 from math import *
 from queue import *
 
 def main(): 
+	searchType = input("Would you like to use simple or heuristic search?\n")
 	accumulatedVisits = []
 	accumulatedEnergy = []
 	numTrials = 100
@@ -22,9 +24,16 @@ def main():
 		#start loop while not goodConditions:
 		while not goodConditions: 
 			officeInNeed = heatMiser.findOfficeInNeed()
-			bfsTuple = heatMiser.breadthFirstSearch(currentOffice, officeInNeed)
-			distanceTraveled = bfsTuple[0]
-			energyConsumed = bfsTuple[1]
+			if searchType == "simple":
+				searchTuple = heatMiser.breadthFirstSearch(currentOffice, officeInNeed)
+			elif searchType == "heuristic":
+				print("let's make a new search strategy!")
+				return False
+			else:
+				print("Invalid search type. Please type 'simple' or 'heuristic' when prompted.")
+				return False
+			distanceTraveled = searchTuple[0]
+			energyConsumed = searchTuple[1]
 			visits += distanceTraveled
 			energy += energyConsumed
 			trips += 1
@@ -223,7 +232,6 @@ class Office:
 		self.energyNeeded = energy
 
 #create a simulation floor of given size (12 for this assignment)
-#index 0 is temps and index 1 is humidities, wherein each index represents an office
 def makeFloor():
 	tempList = []
 	humList = []
