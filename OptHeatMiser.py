@@ -6,8 +6,11 @@ from statistics import *
 from math import *
 from queue import *
 
+#emma says: use the edge weights and the heuristic he gave us in the 
+#text file to find the mallest "cost" 
+#each cost is the weights of the path's edges + the node's heuristic
 def main(): 
-	searchType = input("Would you like to use simple or heuristic search?\n")
+	searchType = input("Would you like to use baseline or heuristic search?\n")
 	accumulatedVisits = []
 	accumulatedEnergy = []
 	numTrials = 100
@@ -24,13 +27,12 @@ def main():
 		#start loop while not goodConditions:
 		while not goodConditions: 
 			officeInNeed = heatMiser.findOfficeInNeed()
-			if searchType == "simple":
+			if searchType == "baseline":
 				searchTuple = heatMiser.breadthFirstSearch(currentOffice, officeInNeed)
 			elif searchType == "heuristic":
-				print("let's make a new search strategy!")
-				return False
+				searchTuple = heatMiser.heuristicSearch(currentOffice, officeInNeed)
 			else:
-				print("Invalid search type. Please type 'simple' or 'heuristic' when prompted.")
+				print("Invalid search type. Please type 'baseline' or 'heuristic' when prompted.")
 				return False
 			distanceTraveled = searchTuple[0]
 			energyConsumed = searchTuple[1]
@@ -184,6 +186,50 @@ class HeatMiser:
 				print("Couldn't find office!")
 				done = True
 		return (distanceTraveled, energyConsumed)
+
+	def heuristicSearch(self, initial, destination): 
+		floor = self.floor
+		for office in floor:
+			office.setVisited(False)
+			office.setDistance(0)
+			office.setEnergyNeeded(0)
+		heuristicTable = []
+		with open("HeatMiserHeuristicMod.txt") as file:
+			for line in file:
+				heuristicTable.append(line.split())
+		if (initial == destination):
+			return (0, 0)
+		heuristicTable.pop(0)
+		straightLineDistance = 0
+		energyConsumed = 0
+		visits = 0
+		currentOffice = floor[initial]
+		done = False
+		while not done:
+			neighbors = currentOffice.getNeighbors()
+			currentOffice.setVisited(True)
+			shortest = (-1, -1, -1) #(straight line distance, office index, energy to get there)
+			for neighborTuple in neighbors:
+				#look up straightline distance and power consumption
+				neighborNum = neighborTuple[0]
+				neighborEnergy = neighborTuple[1]
+				neighbor = floor[neighborNum - 1]
+				tableIndex = ((neighborNum - 1)* 12) + destination
+				straightLineDistance = int(heuristicTable[tableIndex][2])
+				print(straightLineDistance)
+				#sum cumulative energy spent with straight line distance for neighbor to destination
+				energyRequired = currentOffice.getEnergyNeeded() + neighborEnergy
+				utility = energyRequired + straightLineDistance
+				if shortest[0] == -1 or utility < shortest[0]:
+					shortest = (utility, neighbor.getId()-1, energyRequired)
+			#in theory, shortest[0] is the best next choice office to go to
+			currentOffice = floor[shortest[1]]
+			currentOffice.setEnergyNeeded(shortest[2])
+			visits += 1
+			if currentOffice.getId() == destination + 1:
+				done = True
+		return (visits, currentOffice.getEnergyNeeded())
+
 
 class Office:
 	def __init__(self, temp, hum, neighbors, id):
