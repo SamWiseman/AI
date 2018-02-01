@@ -7,39 +7,54 @@ from queue import *
 
 def main(): 
 	accumulatedVisits = []
+	accumulatedEnergy = []
 	numTrials = 100
 	for i in range(numTrials):
 		print("----------------------NEW TRIAL----------------------")
 		floor = makeFloor()
-		initialOffice = randrange(0, 12)
-		breadthFirstSearch(floor, initialOffice)
 		heatMiser = HeatMiser(floor)
+		currentOffice = randrange(0, 12)
+		print("HeatMiser is starting at office " + str(currentOffice + 1) + ".")
 		visits = 0
-		currentOffice = 0
+		energy = 0
+		trips = 0
 		goodConditions = False
-		while not goodConditions:
-			visits += 1
-			currentTemp = floor[0][currentOffice]
-			currentHum = floor[1][currentOffice]
-			goodConditions = heatMiser.makeDecision(currentOffice, currentTemp, currentHum)
-			currentOffice = (currentOffice + 1) % numOffices
+		#start loop while not goodConditions:
+		while not goodConditions: 
+			officeInNeed = heatMiser.findOfficeInNeed()
+			bfsTuple = heatMiser.breadthFirstSearch(currentOffice, officeInNeed)
+			distanceTraveled = bfsTuple[0]
+			energyConsumed = bfsTuple[1]
+			visits += distanceTraveled
+			energy += energyConsumed
+			trips += 1
+			currentOffice = officeInNeed
+			heatMiser.adjustOffice(currentOffice)
+			goodConditions = heatMiser.checkConditions()
 		print("-------------------------------------")
-		for i in range(len(floor[0])):
-			print("Office", i + 1, "is at", floor[0][i], "degrees and",\
-			 floor[1][i], "percent humidity.")
-		heatMiser.reportFinalConditions(visits)
+		for office in heatMiser.floor:
+			print("Office", office.getId(), "is at", office.getTemp(), "degrees and",\
+			 office.getHum(), "percent humidity.")
+		#print("HeatMiser made", trips, "trips.")
+		heatMiser.reportFinalConditions(visits, energy)
 		accumulatedVisits.append(visits)
+		accumulatedEnergy.append(energy)
 	#at end of 100 sims: calculate avg num visits
-	avgVisits = mean(accumulatedVisits)
-	visitsDev = stdev(accumulatedVisits)
+	print("------------------------TRIALS FINISHED------------------------")
+	avgVisits = format(mean(accumulatedVisits), '.2f')
+	visitsDev = format(stdev(accumulatedVisits), '.2f')
+	avgEnergy = format(mean(accumulatedEnergy), '.2f')
+	energyDev = format(stdev(accumulatedEnergy), '.2f')
 	print("Average number of visits across the trials was", avgVisits, "+/-", visitsDev, ".")
+	print("Average energy consumed across the trials was", avgEnergy, "+/-", energyDev, ".")
 
 #the heatmiser class can always access the average temp and humidity and their standard devs
 #it possesses the floor matrix and accesses offices based on a given index number 
 class HeatMiser:
 	def __init__(self, floor):
-		self.temps = floor[0]
-		self.hums = floor[1]
+		self.floor = floor
+		self.temps = [office.getTemp() for office in floor]
+		self.hums = [office.getHum() for office in floor]
 		self.avgTemp = 0
 		self.tempDev = 0
 		self.avgHum = 0
@@ -47,90 +62,58 @@ class HeatMiser:
 		self.updateTempStats(True)
 		self.updateHumStats(True)
 
-	def raiseTemp(self, officeNum):
-		self.reportCurrentConditions(officeNum)
-		self.temps[officeNum] += 1
-		print("HeatMiser raises the temperature of office", officeNum+1, "by 1."\
-		 " It is now", self.temps[officeNum], "degrees.")
-		self.updateTempStats()
-
-	def lowerTemp(self, officeNum):
-		self.reportCurrentConditions(officeNum)
-		self.temps[officeNum] -= 1
-		print("HeatMiser lowers the temperature of office", officeNum+1, "by 1."\
-		 " It is now", self.temps[officeNum], "degrees.")
-		self.updateTempStats()
-
-	def raiseHum(self, officeNum): 
-		self.reportCurrentConditions(officeNum)
-		self.hums[officeNum] += 1
-		print("HeatMiser raises the humidity of office", officeNum+1, "by 1."\
-		 " It is now", self.hums[officeNum], "percent.")
-		self.updateHumStats()
-
-	def lowerHum(self, officeNum):
-		self.reportCurrentConditions(officeNum)
-		self.hums[officeNum] -= 1
-		print("HeatMiser lowers the humidity of office", officeNum + 1, "by 1."\
-		 " It is now", self.hums[officeNum], "percent.")
-		self.updateHumStats()
-
 	def updateTempStats(self, mute=False):
+		self.temps = [office.getTemp() for office in self.floor]
 		self.avgTemp = mean(self.temps)
 		self.tempDev = stdev(self.temps)
 		if not mute:
 			self.reportAverages()
 
 	def updateHumStats(self, mute=False):
+		self.hums = [office.getHum() for office in self.floor]
 		self.avgHum = mean(self.hums)
 		self.humDev = stdev(self.hums)
 		if not mute:
 			self.reportAverages()
 
-	def reportCurrentConditions(self, officeNum):
-		temperature = self.temps[officeNum]
-		humidity = self.hums[officeNum]
-		print("Office", officeNum + 1,"is", temperature, "degrees and",\
+	def reportCurrentConditions(self, office):
+		temperature = office.getTemp()
+		humidity = office.getHum()
+		print("Office", office.getId(),"is", temperature, "degrees and",\
 		 humidity, "percent humidity.")
 
-	def reportAverages(self):
-		print("The floor's average temperature is", format(self.avgTemp, '.2f'),\
-		 "+/-", format(self.tempDev, '.2f'), "degrees.")
-		print("The floor's average humidity is", format(self.avgHum, '.2f'),\
-			"+/-", format(self.humDev, '.2f'), "percent.")
+	def findOfficeInNeed(self):
+		floor = self.floor
+		returnOffice = -1
+		desiredTemp = 72
+		desiredHum = 47
+		biggestDifference = 0
+		for i in range(len(floor)):
+			office = floor[i]
+			temp = office.getTemp()
+			hum = office.getHum()
+			officeDifference = max(abs(desiredTemp - temp), abs(desiredHum - hum))
+			if officeDifference > biggestDifference:
+				biggestDifference = officeDifference
+				returnOffice = i
+		print("Office", returnOffice + 1, "needs to be adjusted. Off we go!")
+		return returnOffice
 
-	def reportFinalConditions(self, visits):
-		print("The floor's final average temperature is", format(self.avgTemp, '.2f'),\
-		 "+/-", format(self.tempDev, '.2f'), "degrees.")
-		print("The floor's final average humidity is", format(self.avgHum, '.2f'),\
-			"+/-", format(self.humDev, '.2f'), "percent.")
-		print("HeatMiser made a total of", visits, "visits.")
+	def adjustOffice(self, officeNum):
+		office = self.floor[officeNum]
+		self.reportCurrentConditions(office)
+		desiredTemp = 72
+		desiredHum = 47
+		office.setTemp(72.5) if self.avgTemp < desiredTemp else office.setTemp(72)
+		office.setHum(47.5) if self.avgHum < desiredHum else office.setHum(47)
+		print("HeatMiser changed office", office.getId(), "to", office.getTemp(),\
+			"degrees and", office.getHum(), "percent humidity.")
+		self.updateTempStats(False)
+		self.updateHumStats(True)
 
-	def makeDecision(self, currentOffice, currentTemp, currentHum):
+	def checkConditions(self):
 		idealTemp = 72
 		idealHum = 47
-		tempDist = abs(idealTemp - currentTemp)
-		humDist = abs(idealHum - currentHum)
-		if humDist > tempDist: 
-			if currentHum >= idealHum + 1:
-				self.lowerHum(currentOffice)
-			elif currentHum < idealHum:
-				self.raiseHum(currentOffice)
-			else: 
-				self.reportCurrentConditions(currentOffice)
-				print("HeatMiser leaves without changing anything.")
-				self.reportAverages()
-		else:
-			if currentTemp >= idealTemp + 1:
-				self.lowerTemp(currentOffice)
-			elif currentTemp < idealTemp:
-				self.raiseTemp(currentOffice)
-			else:
-				self.reportCurrentConditions(currentOffice)
-				print("HeatMiser leaves without changing anything.")
-				self.reportAverages()
-		
-		#determine if goal is reached
 		avgTempDist = self.avgTemp - idealTemp
 		avgHumDist = self.avgHum - idealHum
 		if 0 <= avgTempDist < 1 and 0 <= avgHumDist < 1 \
@@ -139,23 +122,59 @@ class HeatMiser:
 		else: 
 			return False
 
-def breadthFirstSearch(floor, initial):
-	officeQueue = Queue()
-	officeQueue.put(floor[initial])
-	done = False
-	while not done:
-		currentOffice = officeQueue.get()
-		print(currentOffice.getId())
-		currentOffice.setVisited(True)
-		for neighborTuple in currentOffice.neighbors:
-			neighborNum = neighborTuple[0]
-			neighbor = floor[neighborNum - 1]
-			if not neighbor.getVisited():
-				officeQueue.put(neighbor)
-				neighbor.setVisited(True)
-		done = officeQueue.empty()
-	print("Done")
+	def reportAverages(self):
+		print("The floor's average temperature is", format(self.avgTemp, '.2f'),\
+		 "+/-", format(self.tempDev, '.2f'), "degrees.")
+		print("The floor's average humidity is", format(self.avgHum, '.2f'),\
+			"+/-", format(self.humDev, '.2f'), "percent.")
 
+	def reportFinalConditions(self, visits, energy):
+		print("The floor's final average temperature is", format(self.avgTemp, '.2f'),\
+		 "+/-", format(self.tempDev, '.2f'), "degrees.")
+		print("The floor's final average humidity is", format(self.avgHum, '.2f'),\
+			"+/-", format(self.humDev, '.2f'), "percent.")
+		print("HeatMiser made a total of", visits, "visits.")
+		print("HeatMiser consumed a total of", energy, "units of energy.")
+
+	#heatMiser doesn't necessarily take the lowest-energy path. however, it takes the path
+	#of least visits and given two paths of equal length, it takes the lower-energy one 
+	#because of the way the edges are stored in its memory
+	def breadthFirstSearch(self, initial, destination):
+		floor = self.floor
+		for office in floor:
+			office.setVisited(False)
+			office.setDistance(0)
+			office.setEnergyNeeded(0)
+		print("HeatMiser is moving from office " + str(floor[initial].id) + \
+			" to office " + str(floor[destination].id) + ".")
+		officeQueue = Queue()
+		officeQueue.put(floor[initial])
+		done = False
+		distanceTraveled = 0
+		energyConsumed = 0
+		while not done:
+			currentOffice = officeQueue.get()
+			currentOffice.setVisited(True)
+			if currentOffice.getId() == destination + 1:
+				done = True
+				distanceTraveled = currentOffice.getDistance()
+				energyConsumed = currentOffice.getEnergyNeeded()
+				print("HeatMiser traversed", distanceTraveled, "office(s)"\
+					+ ", spending", energyConsumed, "units of energy.")
+				return (distanceTraveled, energyConsumed)
+			for neighborTuple in currentOffice.neighbors:
+				neighborNum = neighborTuple[0]
+				neighborEnergy = neighborTuple[1]
+				neighbor = floor[neighborNum - 1]
+				if not neighbor.getVisited():
+					officeQueue.put(neighbor)
+					neighbor.setVisited(True)
+					neighbor.setDistance(currentOffice.getDistance() + 1)
+					neighbor.setEnergyNeeded(currentOffice.getEnergyNeeded() + neighborEnergy)
+			if officeQueue.empty():
+				print("Couldn't find office!")
+				done = True
+		return (distanceTraveled, energyConsumed)
 
 class Office:
 	def __init__(self, temp, hum, neighbors, id):
@@ -164,6 +183,8 @@ class Office:
 		self.neighbors = neighbors
 		self.visited = False
 		self.id = id
+		self.distance = 0
+		self.energyNeeded = 0
 
 	def getTemp(self):
 		return self.temp
@@ -189,6 +210,17 @@ class Office:
 	def getId(self):
 		return self.id
 
+	def getDistance(self):
+		return self.distance
+
+	def setDistance(self, distance):
+		self.distance = distance
+
+	def getEnergyNeeded(self):
+		return self.energyNeeded
+
+	def setEnergyNeeded(self, energy):
+		self.energyNeeded = energy
 
 #create a simulation floor of given size (12 for this assignment)
 #index 0 is temps and index 1 is humidities, wherein each index represents an office
@@ -199,19 +231,22 @@ def makeFloor():
 		tempList.append(randrange(65, 76))
 		humList.append(randrange(45, 56))
 	office1 = Office(tempList[0], humList[0], [(2,13),(3,15)], 1)
-	office2 = Office(tempList[1], humList[1], [(1,13),(4,7)], 2)
+	office2 = Office(tempList[1], humList[1], [(4,7),(1,13)], 2)
 	office3 = Office(tempList[2], humList[2], [(1,15),(7,23)], 3)
-	office4 = Office(tempList[3], humList[3], [(2,7),(5,6),(6,10),(9,16)], 4)
-	office5 = Office(tempList[4], humList[4], [(4,6),(8,4)], 5)
-	office6 = Office(tempList[5], humList[5], [(4,10),(7,9)], 6)
-	office7 = Office(tempList[6], humList[6], [(3,23),(6,9),(10,17)], 7)
+	office4 = Office(tempList[3], humList[3], [(5,6),(2,7),(6,10),(9,16)], 4)
+	office5 = Office(tempList[4], humList[4], [(8,4),(4,6)], 5)
+	office6 = Office(tempList[5], humList[5], [(7,9),(4,10)], 6)
+	office7 = Office(tempList[6], humList[6], [(6,9),(10,17),(3,23)], 7)
 	office8 = Office(tempList[7], humList[7], [(5,4),(9,5)], 8)
-	office9 = Office(tempList[8], humList[8], [(4,16),(8,5),(10,8)], 9)
-	office10 = Office(tempList[9], humList[9], [(9,8),(11,2)], 10)
+	office9 = Office(tempList[8], humList[8], [(8,5),(10,8),(4,16)], 9)
+	office10 = Office(tempList[9], humList[9], [(11,2),(9,8),(7, 17)], 10)
 	office11 = Office(tempList[10], humList[10], [(10,2),(12,19)], 11)
 	office12 = Office(tempList[11], humList[11], [(11,19)], 12)
 	floor = [office1, office2, office3, office4, office5, office6, office7,\
 	office8, office9, office10, office11, office12]
+	for office in floor: 
+		print("The initial state of office", office.id, "is", \
+			office.getTemp(), "degrees and", office.getHum(), "percent humidity.")
 	return floor
 
 if __name__ == "__main__":
