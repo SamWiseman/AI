@@ -59,7 +59,7 @@ def main():
 	energyDev = format(stdev(accumulatedEnergy), '.2f')
 	print("Average number of visits across the trials was", avgVisits, "+/-", visitsDev, ".")
 	print("Average energy consumed across the trials was", avgEnergy, "+/-", energyDev, ".")
-	if searchType == 'baseline':
+	'''if searchType == 'baseline':
 		with open('vizbaseline.csv', 'w') as file:
 			wr = csv.writer(file, quoting=csv.QUOTE_ALL)
 			wr.writerow(accumulatedVisits)
@@ -68,7 +68,7 @@ def main():
 		with open('vizheuristic.csv', 'w') as file:
 			wr = csv.writer(file, quoting=csv.QUOTE_ALL)
 			wr.writerow(accumulatedVisits)
-			wr.writerow(accumulatedEnergy)
+			wr.writerow(accumulatedEnergy)'''
 
 #the heatmiser class can always access the average temp and humidity and their standard devs
 #it possesses the floor matrix and accesses offices based on a given index number 
