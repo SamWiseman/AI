@@ -205,7 +205,11 @@ class HeatMiser:
 		visits = 0
 		currentOffice = floor[initial]
 		done = False
+		#we keep track of traversed edges (as though they were directed) 
+		#and we never traverse the same edge twice to avoid infloops :) 
+		edgeList = []
 		while not done:
+			print("not done")
 			neighbors = currentOffice.getNeighbors()
 			currentOffice.setVisited(True)
 			shortest = (-1, -1, -1) #(straight line distance, office index, energy to get there)
@@ -214,20 +218,31 @@ class HeatMiser:
 				neighborNum = neighborTuple[0]
 				neighborEnergy = neighborTuple[1]
 				neighbor = floor[neighborNum - 1]
-				tableIndex = ((neighborNum - 1)* 12) + destination
-				straightLineDistance = int(heuristicTable[tableIndex][2])
-				print(straightLineDistance)
-				#sum cumulative energy spent with straight line distance for neighbor to destination
-				energyRequired = currentOffice.getEnergyNeeded() + neighborEnergy
-				utility = energyRequired + straightLineDistance
-				if shortest[0] == -1 or utility < shortest[0]:
-					shortest = (utility, neighbor.getId()-1, energyRequired)
+				#;)
+				if currentOffice.getId() == 10 and destination not in [10, 11]:
+					edgeList.append((10,11)) 
+				if not (currentOffice.getId(), neighborNum) in edgeList:
+					tableIndex = ((neighborNum - 1)* 12) + destination
+					straightLineDistance = int(heuristicTable[tableIndex][2])
+					#sum cumulative energy spent with straight line distance for neighbor to destination
+					energyRequired = currentOffice.getEnergyNeeded() + neighborEnergy
+					print("Energy required:", energyRequired)
+					utility = energyRequired + straightLineDistance
+					if shortest[0] == -1 or utility < shortest[0]:
+						shortest = (utility, neighbor.getId()-1, energyRequired)
 			#in theory, shortest[0] is the best next choice office to go to
+			edgeList.append((currentOffice.getId(), shortest[1] + 1))
 			currentOffice = floor[shortest[1]]
+			print("energy used is:",shortest[2])
 			currentOffice.setEnergyNeeded(shortest[2])
+			currentOffice.setVisited(True)
 			visits += 1
 			if currentOffice.getId() == destination + 1:
+				print("done")
 				done = True
+				print("HeatMiser has reached office", destination + 1, "after",\
+					visits, "visits and used", currentOffice.getEnergyNeeded(),\
+					"units of energy.")
 		return (visits, currentOffice.getEnergyNeeded())
 
 
@@ -240,6 +255,7 @@ class Office:
 		self.id = id
 		self.distance = 0
 		self.energyNeeded = 0
+		self.utiliity = 0
 
 	def getTemp(self):
 		return self.temp
@@ -277,6 +293,11 @@ class Office:
 	def setEnergyNeeded(self, energy):
 		self.energyNeeded = energy
 
+	def getNumVisits(self):
+		return self.numVisits
+
+	def setNumVisits(self, numVists):
+		self.numVisits = numVisits
 #create a simulation floor of given size (12 for this assignment)
 def makeFloor():
 	tempList = []
