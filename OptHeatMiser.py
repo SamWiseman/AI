@@ -5,6 +5,7 @@ from random import *
 from statistics import *
 from math import *
 from queue import *
+import csv
 
 #emma says: use the edge weights and the heuristic he gave us in the 
 #text file to find the mallest "cost" 
@@ -58,6 +59,16 @@ def main():
 	energyDev = format(stdev(accumulatedEnergy), '.2f')
 	print("Average number of visits across the trials was", avgVisits, "+/-", visitsDev, ".")
 	print("Average energy consumed across the trials was", avgEnergy, "+/-", energyDev, ".")
+	if searchType == 'baseline':
+		with open('vizbaseline.csv', 'w') as file:
+			wr = csv.writer(file, quoting=csv.QUOTE_ALL)
+			wr.writerow(accumulatedVisits)
+			wr.writerow(accumulatedEnergy)
+	if searchType == 'heuristic':
+		with open('vizheuristic.csv', 'w') as file:
+			wr = csv.writer(file, quoting=csv.QUOTE_ALL)
+			wr.writerow(accumulatedVisits)
+			wr.writerow(accumulatedEnergy)
 
 #the heatmiser class can always access the average temp and humidity and their standard devs
 #it possesses the floor matrix and accesses offices based on a given index number 
@@ -201,7 +212,6 @@ class HeatMiser:
 			return (0, 0)
 		heuristicTable.pop(0)
 		straightLineDistance = 0
-		energyConsumed = 0
 		visits = 0
 		currentOffice = floor[initial]
 		done = False
@@ -209,10 +219,9 @@ class HeatMiser:
 		#and we never traverse the same edge twice to avoid infloops :) 
 		edgeList = []
 		while not done:
-			print("not done")
 			neighbors = currentOffice.getNeighbors()
 			currentOffice.setVisited(True)
-			shortest = (-1, -1, -1) #(straight line distance, office index, energy to get there)
+			shortest = (-1, -1, -1)
 			for neighborTuple in neighbors:
 				#look up straightline distance and power consumption
 				neighborNum = neighborTuple[0]
@@ -226,23 +235,21 @@ class HeatMiser:
 					straightLineDistance = int(heuristicTable[tableIndex][2])
 					#sum cumulative energy spent with straight line distance for neighbor to destination
 					energyRequired = currentOffice.getEnergyNeeded() + neighborEnergy
-					print("Energy required:", energyRequired)
 					utility = energyRequired + straightLineDistance
 					if shortest[0] == -1 or utility < shortest[0]:
 						shortest = (utility, neighbor.getId()-1, energyRequired)
 			#in theory, shortest[0] is the best next choice office to go to
 			edgeList.append((currentOffice.getId(), shortest[1] + 1))
 			currentOffice = floor[shortest[1]]
-			print("energy used is:",shortest[2])
 			currentOffice.setEnergyNeeded(shortest[2])
 			currentOffice.setVisited(True)
 			visits += 1
 			if currentOffice.getId() == destination + 1:
-				print("done")
 				done = True
 				print("HeatMiser has reached office", destination + 1, "after",\
 					visits, "visits and used", currentOffice.getEnergyNeeded(),\
 					"units of energy.")
+			shortest = (-1, -1, -1)
 		return (visits, currentOffice.getEnergyNeeded())
 
 
