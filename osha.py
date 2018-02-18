@@ -7,6 +7,7 @@ from sklearn.tree import DecisionTreeRegressor
 import matplotlib.pyplot as plt
 import graphviz 
 from copy import deepcopy
+from sklearn.metrics import *
 
 def main():
 	X = []
@@ -37,6 +38,7 @@ def main():
 def crossValidate(k, X, Y):
 	totalLength = len(Y)
 	splitLength = totalLength // k
+	accumulatedStats = [0] * 9
 	for i in range(k):
 		trainingX = deepcopy(X)
 		trainingY = deepcopy(Y)
@@ -50,9 +52,36 @@ def crossValidate(k, X, Y):
 		testingY = deepcopy(testingYRange)
 		trainingY = trainingY[:i * splitLength] if i == k - 1 else \
 			trainingY[:i * splitLength] + trainingY[(i + 1) * splitLength:]
-		output = "visulation k = " + str(i + 1)
-		decisionTree(trainingX, trainingY, testingX, testingY, output)
+		output = i + 1
+		stats = decisionTree(trainingX, trainingY, testingX, testingY, output)
+		for i in range(len(stats)):
+			accumulatedStats[i] += stats[i]
 
+	for i in range(len(accumulatedStats)):
+		accumulatedStats[i] /= k
+
+	avgPrec = 0
+	avgRec = 0
+	avgF1 = 0
+
+	print("**** AVERAGES ****")
+	for i in range(len(accumulatedStats)):
+		osha = ["NonCompliant", "Compliant", "Safe"]
+		if i < 3:
+			print("Average precision for "+osha[i%3]+" is "+str(accumulatedStats[i]))
+			avgPrec += accumulatedStats[i]
+		elif i < 6:
+			print("Average recall for "+osha[i%3]+" is "+str(accumulatedStats[i]))
+			avgRec += accumulatedStats[i]
+		else:
+			print("Average F1 for "+osha[i%3]+" is "+str(accumulatedStats[i]))
+			avgF1 += accumulatedStats[i]
+	avgPrec /= 3
+	avgRec /= 3
+	avgF1 /= 3
+	print("\nTotal average precision is", avgPrec)
+	print("Total average recall is", avgRec)
+	print("Total average F1 is", avgF1)
 
 
 def decisionTree(trainingX, trainingY, testingX, testingY, output):
@@ -62,19 +91,27 @@ def decisionTree(trainingX, trainingY, testingX, testingY, output):
 	prediction = clf.predict(testingX)
 	if not len(testingY) == len(prediction):
 		print("Somebody fucked up. Yikes.")
-	for i in range(len(prediction)):
-		if prediction[i] == testingY[i]:
-			print("Cool! They're equal.")
-		else:
-			print("Oh well! They are not equal.")
-
-	#message = "We good!" if equal else "Hmmm..."
-	#print(message)
-
+	print("**** STATS FOR ITERATION " + str(output) + " ****")
+	print(["NonCompliant", "Compliant", "Safe"])
+	stats = calculateStats(testingY, prediction)
 	#create visual graph
 	dot_data = tree.export_graphviz(clf, out_file=None) 
 	graph = graphviz.Source(dot_data) 
-	graph.render(output)
+	graph.render("visualization k = " + str(output))
+	return stats
+
+def calculateStats(testingY, prediction):
+	prec = precision_score(testingY, prediction, average=None)
+	rec = recall_score(testingY, prediction, average=None)
+	f1 = [2 * ((prec[i] * rec[i]) / (prec[i] + rec[i])) for i in range(len(prec))]
+	print("PRECISION")
+	print(prec)
+	print("RECALL")
+	print(rec)
+	print("F1")
+	print(np.asarray(f1))	
+	return prec.tolist() + rec.tolist() + f1
+
 
 
 	
