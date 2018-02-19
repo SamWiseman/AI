@@ -32,10 +32,46 @@ def main():
 			Y[i] = 2
 		else:
 			Y[i] = 0
+	fScores = []
+	crossValidate(10, X, Y, fScores)
+	"""
+	safe = 0
+	compliant = 0
+	non = 0
+	for item in Y:
+		if item == 0:
+			non +=1
+		elif item == 1:
+			compliant +=1
+		elif item ==2:
+			safe +=1
+	print("majority is",safe, compliant, non)
+	"""
+	majorityBaseline = getBaseline(Y)
+	plt.plot(fScores)
+	#plt.plot([9, 9, 9, 9, 9, 9, 9, 9, 9])
+	plt.show()
+	print(fScores)
 
-	crossValidate(10, X, Y)
 
-def crossValidate(k, X, Y):
+def getBaseline(Y):
+	counts = {}
+	for item in Y:
+		if item not in counts:
+			counts[item] = 1
+		else: 
+			counts[item] += 1
+	keys = list(counts.keys())
+	values = list(counts.values())
+	majority = keys[values.index(max(values))]
+	X = [majority] * len(Y)
+	prec = precision_score(Y, X, average=None)
+	rec = recall_score(Y, X, average=None)
+	print ("precnrec:", prec, rec)
+	f1 = 2 * ((prec * rec) / (prec + rec))
+	print("effone",f1)
+
+def crossValidate(k, X, Y, fScores):
 	totalLength = len(Y)
 	splitLength = totalLength // k
 	accumulatedStats = [0] * 9
@@ -53,7 +89,7 @@ def crossValidate(k, X, Y):
 		trainingY = trainingY[:i * splitLength] if i == k - 1 else \
 			trainingY[:i * splitLength] + trainingY[(i + 1) * splitLength:]
 		output = i + 1
-		stats = decisionTree(trainingX, trainingY, testingX, testingY, output)
+		stats = decisionTree(trainingX, trainingY, testingX, testingY, output, fScores)
 		for i in range(len(stats)):
 			accumulatedStats[i] += stats[i]
 
@@ -84,7 +120,7 @@ def crossValidate(k, X, Y):
 	print("Total average F1 is", avgF1)
 
 
-def decisionTree(trainingX, trainingY, testingX, testingY, output):
+def decisionTree(trainingX, trainingY, testingX, testingY, output, fScores):
 	
 	clf = tree.DecisionTreeClassifier()
 	clf = clf.fit(trainingX, trainingY)
@@ -93,14 +129,14 @@ def decisionTree(trainingX, trainingY, testingX, testingY, output):
 		print("Somebody fucked up. Yikes.")
 	print("**** STATS FOR ITERATION " + str(output) + " ****")
 	print(["NonCompliant", "Compliant", "Safe"])
-	stats = calculateStats(testingY, prediction)
+	stats = calculateStats(testingY, prediction, fScores)
 	#create visual graph
 	dot_data = tree.export_graphviz(clf, out_file=None) 
 	graph = graphviz.Source(dot_data) 
 	graph.render("visualization k = " + str(output))
 	return stats
 
-def calculateStats(testingY, prediction):
+def calculateStats(testingY, prediction, fScores):
 	prec = precision_score(testingY, prediction, average=None)
 	rec = recall_score(testingY, prediction, average=None)
 	f1 = [2 * ((prec[i] * rec[i]) / (prec[i] + rec[i])) for i in range(len(prec))]
@@ -109,7 +145,8 @@ def calculateStats(testingY, prediction):
 	print("RECALL")
 	print(rec)
 	print("F1")
-	print(np.asarray(f1))	
+	print(np.asarray(f1))
+	fScores.append(sum(f1)/3)	
 	return prec.tolist() + rec.tolist() + f1
 
 
