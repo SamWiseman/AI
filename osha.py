@@ -8,49 +8,17 @@ import matplotlib.pyplot as plt
 import graphviz 
 from copy import deepcopy
 from sklearn.metrics import *
+from sklearn.cluster import KMeans
 
 def main():
+	#partOneTree()
 	X = []
-	Y = []
-	#read file into arrays and preprocess data
-	data = open('HW3_Data.txt')
-	for line in data:
-		example = line.split()
-		example.pop(0)
-		Y.append(example.pop(-1))
-		if example[2] == "Office":
-			example[2] = 0
-		elif example[2] == "Warehouse":
-			example[2] = 1
-		X.append(example)
-	X.pop(0)
-	Y.pop(0)
-	for i in range (len(Y)):
-		if Y[i] == "Compliant":
-			Y[i] = 1
-		elif Y[i] == "Safe":
-			Y[i] = 2
-		else:
-			Y[i] = 0
-	fScores = []
-	crossValidate(10, X, Y, fScores)
-	"""
-	safe = 0
-	compliant = 0
-	non = 0
-	for item in Y:
-		if item == 0:
-			non +=1
-		elif item == 1:
-			compliant +=1
-		elif item ==2:
-			safe +=1
-	print("majority is",safe, compliant, non)
-	"""
-	majorityBaseline = getBaseline(Y)
-	plt.plot(fScores)
-	plt.plot([majorityBaseline] * len(fScores))
-	plt.show()
+	data = open('HW3_Data.txt').readlines()
+	for i in range(1, len(data)):
+		X.append([float(data[i].split()[1])] + [int(data[i].split()[2])])
+	k = 3
+	kClustering(X, k)
+
 
 def getBaseline(Y):
 	counts = {}
@@ -118,9 +86,30 @@ def crossValidate(k, X, Y, fScores):
 	print("Total average recall is", avgRec)
 	print("Total average F1 is", avgF1)
 
+def kClustering(X, k):
+	kmeans = KMeans(n_clusters=k).fit(X)
+	xValues = []
+	yValues = []
+	for sample in X:
+		xValues.append(sample[0])
+		yValues.append(sample[1])
+	labels = kmeans.labels_
+	print(k)
+	speedByCluster = [[] for i in range(k)]
+	distByCluster = [[] for i in range(k)]
+	for i in range(len(labels)):
+		label = labels[i]
+		speed = X[i][0]
+		dist = X[i][1]
+		print(label)
+		speedByCluster[label].append(speed)
+		distByCluster[label].append(dist)
+	for i in range(k):
+		plt.scatter(speedByCluster[i], distByCluster[i])
+		#plt.scatter(xValues, yValues)
+	plt.show()
 
 def decisionTree(trainingX, trainingY, testingX, testingY, output, fScores):
-	
 	clf = tree.DecisionTreeClassifier()
 	clf = clf.fit(trainingX, trainingY)
 	prediction = clf.predict(testingX)
@@ -148,7 +137,35 @@ def calculateStats(testingY, prediction, fScores):
 	fScores.append(sum(f1)/3)	
 	return prec.tolist() + rec.tolist() + f1
 
-
+def partOneTree():
+	X = []
+	Y = []
+	#read file into arrays and preprocess data
+	data = open('HW3_Data.txt')
+	for line in data:
+		example = line.split()
+		example.pop(0)
+		Y.append(example.pop(-1))
+		if example[2] == "Office":
+			example[2] = 0
+		elif example[2] == "Warehouse":
+			example[2] = 1
+		X.append(example)
+	X.pop(0)
+	Y.pop(0)
+	for i in range (len(Y)):
+		if Y[i] == "Compliant":
+			Y[i] = 1
+		elif Y[i] == "Safe":
+			Y[i] = 2
+		else:
+			Y[i] = 0
+	fScores = []
+	crossValidate(10, X, Y, fScores)
+	majorityBaseline = getBaseline(Y)
+	plt.plot(fScores)
+	plt.plot([majorityBaseline] * len(fScores))
+	plt.show()
 
 	
 	 
