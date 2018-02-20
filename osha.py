@@ -49,10 +49,8 @@ def main():
 	"""
 	majorityBaseline = getBaseline(Y)
 	plt.plot(fScores)
-	#plt.plot([9, 9, 9, 9, 9, 9, 9, 9, 9])
+	plt.plot([majorityBaseline] * len(fScores))
 	plt.show()
-	print(fScores)
-
 
 def getBaseline(Y):
 	counts = {}
@@ -68,8 +66,9 @@ def getBaseline(Y):
 	prec = precision_score(Y, X, average=None)
 	rec = recall_score(Y, X, average=None)
 	print ("precnrec:", prec, rec)
-	f1 = 2 * ((prec * rec) / (prec + rec))
+	f1 = 2 * ((prec[majority] * rec[majority]) / (prec[majority] + rec[majority]))
 	print("effone",f1)
+	return f1
 
 def crossValidate(k, X, Y, fScores):
 	totalLength = len(Y)
