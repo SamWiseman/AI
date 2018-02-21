@@ -16,8 +16,12 @@ def main():
 	data = open('HW3_Data.txt').readlines()
 	for i in range(1, len(data)):
 		X.append([float(data[i].split()[1])] + [int(data[i].split()[2])])
-	for k in range(2, 10):
-		kClustering(X, k)
+	sumSquaredError = []
+	for k in range(2, 11):
+		sumSquaredError.append(kClustering(X, k))
+	xValues = range(2,11)
+	plt.plot(xValues, sumSquaredError)
+	plt.show()
 
 
 def getBaseline(Y):
@@ -112,6 +116,7 @@ def kClustering(X, k):
 	sumsSquared = kmeans.inertia_
 	print("Sum of squares for k =",k,":", sumsSquared)
 	plt.show()
+	return sumsSquared
 
 def decisionTree(trainingX, trainingY, testingX, testingY, output, fScores):
 	clf = tree.DecisionTreeClassifier()
