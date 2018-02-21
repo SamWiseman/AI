@@ -11,18 +11,10 @@ from sklearn.metrics import *
 from sklearn.cluster import KMeans
 
 def main():
-	#partOneTree()
-	X = []
-	data = open('HW3_Data.txt').readlines()
-	for i in range(1, len(data)):
-		X.append([float(data[i].split()[1])] + [int(data[i].split()[2])])
-	sumSquaredError = []
-	for k in range(2, 11):
-		sumSquaredError.append(kClustering(X, k))
-	xValues = range(2,11)
-	plt.plot(xValues, sumSquaredError)
-	plt.show()
-
+	print("---------------------DECISION TREE---------------------\n")
+	partOneTree()
+	print("\n---------------------K-CLUSTERING---------------------\n")
+	partTwoCluster()
 
 def getBaseline(Y):
 	counts = {}
@@ -37,9 +29,7 @@ def getBaseline(Y):
 	X = [majority] * len(Y)
 	prec = precision_score(Y, X, average=None)
 	rec = recall_score(Y, X, average=None)
-	print ("precnrec:", prec, rec)
 	f1 = 2 * ((prec[majority] * rec[majority]) / (prec[majority] + rec[majority]))
-	print("effone",f1)
 	return f1
 
 def crossValidate(k, X, Y, fScores):
@@ -63,7 +53,6 @@ def crossValidate(k, X, Y, fScores):
 		stats = decisionTree(trainingX, trainingY, testingX, testingY, output, fScores)
 		for i in range(len(stats)):
 			accumulatedStats[i] += stats[i]
-
 	for i in range(len(accumulatedStats)):
 		accumulatedStats[i] /= k
 
@@ -112,10 +101,13 @@ def kClustering(X, k):
 	centroids = kmeans.cluster_centers_
 	centroidsX = [centroid[0] for centroid in centroids]
 	centroidsY = [centroid[1] for centroid in centroids]
-	plt.scatter(centroidsX, centroidsY)
+	plt.scatter(centroidsX, centroidsY, marker="*")
 	sumsSquared = kmeans.inertia_
 	print("Sum of squares for k =",k,":", sumsSquared)
-	plt.show()
+	output = str(k) + " clusters.png"
+	plt.xlabel("Speed")
+	plt.ylabel("Distance")
+	plt.savefig(output)
 	return sumsSquared
 
 def decisionTree(trainingX, trainingY, testingX, testingY, output, fScores):
@@ -127,10 +119,10 @@ def decisionTree(trainingX, trainingY, testingX, testingY, output, fScores):
 	print("**** STATS FOR ITERATION " + str(output) + " ****")
 	print(["NonCompliant", "Compliant", "Safe"])
 	stats = calculateStats(testingY, prediction, fScores)
-	#create visual graph
+	'''
 	dot_data = tree.export_graphviz(clf, out_file=None) 
 	graph = graphviz.Source(dot_data) 
-	graph.render("visualization k = " + str(output))
+	graph.render("visualization k = " + str(output))'''
 	return stats
 
 def calculateStats(testingY, prediction, fScores):
@@ -174,9 +166,38 @@ def partOneTree():
 	majorityBaseline = getBaseline(Y)
 	plt.plot(fScores)
 	plt.plot([majorityBaseline] * len(fScores))
-	plt.show()
+	plt.xlabel("Fold")
+	plt.ylabel("F1")
+	plt.savefig('BaselineComparison.png')
 
-	
+def partTwoCluster():
+	X = []
+	data = open('HW3_Data.txt').readlines()
+	for i in range(1, len(data)):
+		X.append([float(data[i].split()[1])] + [int(data[i].split()[2])])
+	sumSquaredError = []
+	minClusters = 2
+	xValues = range(minClusters, 11)
+	for k in xValues:
+		sumSquaredError.append(kClustering(X, k))
+	#to find the elbow in the graph, find the point with the greatest difference between slopes
+	#the x value of this point is supposedly the ideal number of clusters
+	elbowK = 0
+	maxDiff = 0
+	slopes = [abs(sumSquaredError[i + 1] - sumSquaredError[i]) for i in range(len(xValues) - 1)]
+	for i in range(len(slopes) - 1):
+		diff = abs(slopes[i + 1] - slopes[i])
+		if diff > maxDiff:
+			maxDiff = diff
+			elbowK = 1 + i + minClusters
+	print("The elbow occurs at k = " + str(elbowK) + \
+		". This is the ideal k for clustering.")
+	plt.gcf().clear()
+	plt.plot(xValues, sumSquaredError)
+	plt.xlabel("Number of clusters")
+	plt.ylabel("Sum squared error")
+	plt.savefig('SquaredError.png')
+
 	 
 
 if __name__ == '__main__':
