@@ -9,6 +9,7 @@ import graphviz
 from copy import deepcopy
 from sklearn.metrics import *
 from sklearn.cluster import KMeans
+import random
 
 def main():
 	print("---------------------DECISION TREE---------------------\n")
@@ -55,7 +56,6 @@ def crossValidate(k, X, Y, fScores):
 			accumulatedStats[i] += stats[i]
 	for i in range(len(accumulatedStats)):
 		accumulatedStats[i] /= k
-
 	avgPrec = 0
 	avgRec = 0
 	avgF1 = 0
@@ -142,18 +142,19 @@ def partOneTree():
 	X = []
 	Y = []
 	#read file into arrays and preprocess data
-	data = open('HW3_Data.txt')
+	data = open('HW3_Data.txt').readlines()
+	data.pop(0)
+	random.shuffle(data)
+	print(data)
 	for line in data:
-		example = line.split()
-		example.pop(0)
-		Y.append(example.pop(-1))
-		if example[2] == "Office":
-			example[2] = 0
-		elif example[2] == "Warehouse":
-			example[2] = 1
-		X.append(example)
-	X.pop(0)
-	Y.pop(0)
+		sample = line.split()
+		sample.pop(0)
+		Y.append(sample.pop(-1))
+		if sample[2] == "Office":
+			sample[2] = 0
+		elif sample[2] == "Warehouse":
+			sample[2] = 1
+		X.append(sample)
 	for i in range (len(Y)):
 		if Y[i] == "Compliant":
 			Y[i] = 1
@@ -176,7 +177,7 @@ def partTwoCluster():
 	for i in range(1, len(data)):
 		X.append([float(data[i].split()[1])] + [int(data[i].split()[2])])
 	sumSquaredError = []
-	minClusters = 2
+	minClusters = 1
 	xValues = range(minClusters, 11)
 	for k in xValues:
 		sumSquaredError.append(kClustering(X, k))
