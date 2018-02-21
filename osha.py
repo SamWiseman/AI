@@ -16,8 +16,8 @@ def main():
 	data = open('HW3_Data.txt').readlines()
 	for i in range(1, len(data)):
 		X.append([float(data[i].split()[1])] + [int(data[i].split()[2])])
-	k = 3
-	kClustering(X, k)
+	for k in range(2, 10):
+		kClustering(X, k)
 
 
 def getBaseline(Y):
@@ -94,19 +94,23 @@ def kClustering(X, k):
 		xValues.append(sample[0])
 		yValues.append(sample[1])
 	labels = kmeans.labels_
-	print(k)
 	speedByCluster = [[] for i in range(k)]
 	distByCluster = [[] for i in range(k)]
 	for i in range(len(labels)):
 		label = labels[i]
 		speed = X[i][0]
 		dist = X[i][1]
-		print(label)
 		speedByCluster[label].append(speed)
 		distByCluster[label].append(dist)
 	for i in range(k):
 		plt.scatter(speedByCluster[i], distByCluster[i])
 		#plt.scatter(xValues, yValues)
+	centroids = kmeans.cluster_centers_
+	centroidsX = [centroid[0] for centroid in centroids]
+	centroidsY = [centroid[1] for centroid in centroids]
+	plt.scatter(centroidsX, centroidsY)
+	sumsSquared = kmeans.inertia_
+	print("Sum of squares for k =",k,":", sumsSquared)
 	plt.show()
 
 def decisionTree(trainingX, trainingY, testingX, testingY, output, fScores):
