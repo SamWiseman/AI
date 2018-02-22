@@ -12,7 +12,7 @@ from sklearn.cluster import KMeans
 import random
 
 def main():
-	print("---------------------DECISION TREE---------------------\n")
+	print("\n---------------------DECISION TREE---------------------\n")
 	partOneTree()
 	print("\n---------------------K-CLUSTERING---------------------\n")
 	partTwoCluster()
@@ -90,7 +90,7 @@ def crossValidate(k, X, Y, fScores):
 	avgRec = 0
 	avgF1 = 0
 
-	print("**** AVERAGES ****")
+	print("\n**** AVERAGES ****")
 	for i in range(len(accumulatedStats)):
 		osha = ["NonCompliant", "Compliant", "Safe"]
 		if i < 3:
