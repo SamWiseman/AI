@@ -1,8 +1,7 @@
 Run from command line using:
 
-python3 HeatMiser.py
+python3 osha.py
 
-type 'baseline' or 'heuristic' when prompted (no quotes)
-
-program requires file HeatMiserHeuristicMod.txt 
-- a modification of HeatMiserHeuristic.txt that includes the path from each node to itself
+Observe the image files showcasing our supervised majority baseline
+comparison, clusters for k = 1-10, and elbow curve for k in terms of
+sum squared error. 

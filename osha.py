@@ -33,6 +33,35 @@ def getBaseline(Y):
 	f1 = 2 * ((prec[majority] * rec[majority]) / (prec[majority] + rec[majority]))
 	return f1
 
+def makeScatter(data):
+	xArray = [[] for i in range(3)]
+	yArray = [[] for i in range(3)]
+	data.pop(0)
+	plt.gcf().clear()
+	for line in data:
+		facts = line.split()
+		osha = facts[4]
+		if osha == "Safe":
+			index = 0
+		elif osha == "Compliant":
+			index = 1
+		else: 
+			index = 2
+		speed = int(facts[2])
+		dist = float(facts[1])
+		xArray[index].append(dist)
+		yArray[index].append(speed)
+	for i in range(3):
+		plt.scatter(xArray[i], yArray[i])
+		#plt.show()
+	plt.xlabel("Distance")
+	plt.ylabel("Speed")
+	plt.savefig("graphforwriteup")
+
+def makePlot(stats):
+	print('STATS')
+	print(stats)
+
 def crossValidate(k, X, Y, fScores):
 	totalLength = len(Y)
 	splitLength = totalLength // k
@@ -52,6 +81,7 @@ def crossValidate(k, X, Y, fScores):
 			trainingY[:i * splitLength] + trainingY[(i + 1) * splitLength:]
 		output = i + 1
 		stats = decisionTree(trainingX, trainingY, testingX, testingY, output, fScores)
+		makePlot(stats)
 		for i in range(len(stats)):
 			accumulatedStats[i] += stats[i]
 	for i in range(len(accumulatedStats)):
@@ -80,24 +110,19 @@ def crossValidate(k, X, Y, fScores):
 	print("Total average F1 is", avgF1)
 
 def kClustering(X, k):
+	plt.gcf().clear()
 	kmeans = KMeans(n_clusters=k).fit(X)
-	xValues = []
-	yValues = []
-	for sample in X:
-		xValues.append(sample[0])
-		yValues.append(sample[1])
 	labels = kmeans.labels_
 	speedByCluster = [[] for i in range(k)]
 	distByCluster = [[] for i in range(k)]
 	for i in range(len(labels)):
 		label = labels[i]
-		speed = X[i][0]
-		dist = X[i][1]
+		dist = X[i][0]
+		speed = X[i][1]
 		speedByCluster[label].append(speed)
 		distByCluster[label].append(dist)
 	for i in range(k):
-		plt.scatter(speedByCluster[i], distByCluster[i])
-		#plt.scatter(xValues, yValues)
+		plt.scatter(distByCluster[i], speedByCluster[i])
 	centroids = kmeans.cluster_centers_
 	centroidsX = [centroid[0] for centroid in centroids]
 	centroidsY = [centroid[1] for centroid in centroids]
@@ -105,8 +130,8 @@ def kClustering(X, k):
 	sumsSquared = kmeans.inertia_
 	print("Sum of squares for k =",k,":", sumsSquared)
 	output = str(k) + " clusters.png"
-	plt.xlabel("Speed")
-	plt.ylabel("Distance")
+	plt.xlabel("Distance")
+	plt.ylabel("Speed")
 	plt.savefig(output)
 	return sumsSquared
 
@@ -119,8 +144,8 @@ def decisionTree(trainingX, trainingY, testingX, testingY, output, fScores):
 	print("**** STATS FOR ITERATION " + str(output) + " ****")
 	print(["NonCompliant", "Compliant", "Safe"])
 	stats = calculateStats(testingY, prediction, fScores)
-	'''
-	dot_data = tree.export_graphviz(clf, out_file=None) 
+	
+	'''dot_data = tree.export_graphviz(clf, out_file=None) 
 	graph = graphviz.Source(dot_data) 
 	graph.render("visualization k = " + str(output))'''
 	return stats
@@ -145,7 +170,6 @@ def partOneTree():
 	data = open('HW3_Data.txt').readlines()
 	data.pop(0)
 	random.shuffle(data)
-	print(data)
 	for line in data:
 		sample = line.split()
 		sample.pop(0)
@@ -174,6 +198,7 @@ def partOneTree():
 def partTwoCluster():
 	X = []
 	data = open('HW3_Data.txt').readlines()
+	#makeScatter(data)
 	for i in range(1, len(data)):
 		X.append([float(data[i].split()[1])] + [int(data[i].split()[2])])
 	sumSquaredError = []
