@@ -12,34 +12,53 @@ def getBruteForceSolution():
 	actions = [0, 1, 2]
 	root = State([None] * len(roomList), [])
 	solutions = []
-	bruteForce(root, actions, 0, roomList, solutions)
+	#bruteForce(root, actions, 0, roomList, solutions)
+	solutions = bruteForce(actions, roomList)
 	return solutions
 
-#our brute force solution
-def bruteForce(state, actions, roomNum, roomList, solutions):
-	print("state actions:", state.getActions())
-	if roomNum == len(roomList) - 1:
-		print("Full coloring complete.")
-		goodActions = state.getActions()
-		print("Solution:", goodActions)
-		solutions.append(goodActions)
-		return []
-	for i in range(len(actions)):
-		print("i is", i)
-		if validChild(roomList[roomNum], actions[i]) == True:
-			print("valid")
-			#recurse here? want a child with the list of actions filled in so far
-			child = State(deepcopy(state.actions), [])
-			action = actions[i]
-			child.setAction(roomNum, action)
-			roomList[roomNum].setAction(actions)
-			state.addChild(child)
-		else:
-			print("It is a not valid to color", roomList[i].getName(), "with", actions[i])
-	state.printState()
-	for child in state.getChildren():
-		print("child:")
-		child.printState()
+#brute force solution: generate all 10-digit ternary numbers
+#turn them into arrays and check if each is valid
+def bruteForce(actions, roomList):
+	allStates = []
+	numVariables = len(roomList)
+	domainSize = len(actions)
+	#generate a ternary number representing each state
+	for i in range(domainSize**numVariables):
+		state = [actions[0]] * len(roomList)
+		num = i
+		j = 1
+		while num:
+			state[numVariables - j] = num % domainSize
+			num //= 3
+			j += 1
+		print(state, i)
+		allStates.append(state)
+	goodStates = []
+
+# def bruteForce(state, actions, roomNum, roomList, solutions):
+# 	print("state actions:", state.getActions())
+# 	if roomNum == len(roomList) - 1:
+# 		print("Full coloring complete.")
+# 		goodActions = state.getActions()
+# 		print("Solution:", goodActions)
+# 		solutions.append(goodActions)
+# 		return []
+# 	for i in range(len(actions)):
+# 		print("i is", i)
+# 		if validChild(roomList[roomNum], actions[i]) == True:
+# 			print("valid")
+# 			#recurse here? want a child with the list of actions filled in so far
+# 			child = State(deepcopy(state.actions), [])
+# 			action = actions[i]
+# 			child.setAction(roomNum, action)
+# 			roomList[roomNum].setAction(actions)
+# 			state.addChild(child)
+# 		else:
+# 			print("It is a not valid to color", roomList[i].getName(), "with", actions[i])
+# 	state.printState()
+# 	for child in state.getChildren():
+# 		print("child:")
+# 		child.printState()
 	
 def validChild(room, action):
 	for neighbor in room.getNeighbors():
