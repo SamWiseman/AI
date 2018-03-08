@@ -35,7 +35,7 @@ def bruteForce(actions, roomList):
 	goodStates = []
 	for state in allStates:
 		if isValid(state, roomList):
-			goodStates.append(state, roomList)
+			goodStates.append(state)
 	print("There are", len(goodStates), "valid solutions.")
 
 #goes through state, gets a color. gets the corresponding room in roomlist. 
@@ -46,13 +46,12 @@ def isValid(state, roomList):
 		action = state[i]
 		room = stateRooms[i]
 		room.setAction(action)
-	print("Staterooms:", [room.getAction() for room in stateRooms])
-	for room in stateRooms:
+	for i in range(len(stateRooms)):
+		room = stateRooms[i]
 		action = state[i]
 		neighbors = room.getNeighbors()
 		for neighbor in neighbors:
 			if neighbor.getAction() == action:
-				print("The state", state, "is invalid.")
 				return False
 	print("The state", state, "is valid! Rejoice!")
 	return True
