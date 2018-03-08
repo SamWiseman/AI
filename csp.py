@@ -37,6 +37,17 @@ def bruteForce(actions, roomList):
 		if isValid(state, roomList):
 			goodStates.append(state)
 	print("There are", len(goodStates), "valid solutions.")
+	for i in range(len(goodStates)):
+		print("-------------------- SOLUTION", i+1, "--------------------")
+		solution = goodStates[i]
+		mapping = {0:"pass", 1:"change temperature", 2:"change humidity"}
+		iterations = getIterations(solution, actions)
+		print("Iterations is", iterations)
+		for i in range(len(iterations)):
+			print("ITERATION", i+1)
+			iteration = iterations[i]
+			for i in range(len(roomList)):
+				print("Heatmiser should", mapping.get(iteration[i]), "in room", roomList[i].getName())
 
 #goes through state, gets a color. gets the corresponding room in roomlist. 
 #makes sure none of the neighbors of that room have the same color in state
@@ -55,6 +66,17 @@ def isValid(state, roomList):
 				return False
 	print("The state", state, "is valid! Rejoice!")
 	return True
+
+#gets "equivalent" iterations for a state that will allow us to perform every action in every room
+def getIterations(state, actions):
+	iterations = []
+	for i in range(len(actions)):
+		iterations.append(deepcopy(state))
+		iteration = []
+		for i in range(len(state)):
+			action = state[i]
+			state[i] = (action+1) % 3
+	return iterations
 # def bruteForce(state, actions, roomNum, roomList, solutions):
 # 	print("state actions:", state.getActions())
 # 	if roomNum == len(roomList) - 1:
