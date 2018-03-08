@@ -31,10 +31,31 @@ def bruteForce(actions, roomList):
 			state[numVariables - j] = num % domainSize
 			num //= 3
 			j += 1
-		print(state, i)
 		allStates.append(state)
 	goodStates = []
+	for state in allStates:
+		if isValid(state, roomList):
+			goodStates.append(state, roomList)
+	print("There are", len(goodStates), "valid solutions.")
 
+#goes through state, gets a color. gets the corresponding room in roomlist. 
+#makes sure none of the neighbors of that room have the same color in state
+def isValid(state, roomList):
+	stateRooms = deepcopy(roomList)
+	for i in range(len(state)):
+		action = state[i]
+		room = stateRooms[i]
+		room.setAction(action)
+	print("Staterooms:", [room.getAction() for room in stateRooms])
+	for room in stateRooms:
+		action = state[i]
+		neighbors = room.getNeighbors()
+		for neighbor in neighbors:
+			if neighbor.getAction() == action:
+				print("The state", state, "is invalid.")
+				return False
+	print("The state", state, "is valid! Rejoice!")
+	return True
 # def bruteForce(state, actions, roomNum, roomList, solutions):
 # 	print("state actions:", state.getActions())
 # 	if roomNum == len(roomList) - 1:
