@@ -16,10 +16,10 @@ def runMcv(actions, roomList):
 	return mostConstrainingVariable(actions, roomList, solutions)
 
 def mostConstrainingVariable(actions, roomList, solutions):
-	
+	print("wow that sure is constraining!")
 
 def canAdd(action, state, roomList):
-	
+	print("yes you can")
 #brute force solution: generate all 10-digit ternary numbers
 #turn them into arrays and check if each is valid
 def bruteForce(actions, roomList):
