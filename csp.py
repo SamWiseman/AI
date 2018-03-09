@@ -1,21 +1,25 @@
 #csp.py
-
 from copy import deepcopy
+import sys
 
 def main():
-	#initialize rooms
-	bruteActions = getBruteForceSolution()
+	numActions = 3 if len(sys.argv) < 2 else int(sys.argv[1])
+	roomList = generateGraph()
+	actions = [i for i in range(numActions)]
+	bruteActions = bruteForce(actions, roomList)
+	mcvActions = mostConstrainingVariable(actions, roomList)
 	
 
-def getBruteForceSolution():
-	roomList = generateGraph()
-	actions = [0, 1, 2]
-	root = State([None] * len(roomList), [])
+def runMcv(actions, roomList):
 	solutions = []
-	#bruteForce(root, actions, 0, roomList, solutions)
-	solutions = bruteForce(actions, roomList)
-	return solutions
+	roomList.sort(key= lambda room: len(room.getNeighbors()), reverse=True)
+	return mostConstrainingVariable(actions, roomList, solutions)
 
+def mostConstrainingVariable(actions, roomList, solutions):
+	
+
+def canAdd(action, state, roomList):
+	
 #brute force solution: generate all 10-digit ternary numbers
 #turn them into arrays and check if each is valid
 def bruteForce(actions, roomList):
@@ -26,11 +30,11 @@ def bruteForce(actions, roomList):
 	for i in range(domainSize**numVariables):
 		state = [actions[0]] * len(roomList)
 		num = i
-		j = 1
+		j = -1
 		while num:
-			state[numVariables - j] = num % domainSize
-			num //= 3
-			j += 1
+			state[j] = num % domainSize
+			num //= domainSize
+			j -= 1
 		allStates.append(state)
 	goodStates = []
 	for state in allStates:
@@ -38,11 +42,10 @@ def bruteForce(actions, roomList):
 			goodStates.append(state)
 	print("There are", len(goodStates), "valid solutions.")
 	for i in range(len(goodStates)):
-		print("-------------------- SOLUTION", i+1, "--------------------")
+		print("\n-------------------- SOLUTION", i+1, "--------------------")
 		solution = goodStates[i]
 		mapping = {0:"pass", 1:"change temperature", 2:"change humidity"}
 		iterations = getIterations(solution, actions)
-		print("Iterations is", iterations)
 		for i in range(len(iterations)):
 			print("ITERATION", i+1)
 			iteration = iterations[i]
@@ -61,9 +64,9 @@ def isValid(state, roomList):
 		room = stateRooms[i]
 		action = state[i]
 		neighbors = room.getNeighbors()
-		for neighbor in neighbors:
-			if neighbor.getAction() == action:
-				return False
+		neighborActions = [neighbor.getAction() for neighbor in neighbors]
+		if action in neighborActions:
+			return False
 	print("The state", state, "is valid! Rejoice!")
 	return True
 
@@ -77,36 +80,10 @@ def getIterations(state, actions):
 			action = state[i]
 			state[i] = (action+1) % 3
 	return iterations
-# def bruteForce(state, actions, roomNum, roomList, solutions):
-# 	print("state actions:", state.getActions())
-# 	if roomNum == len(roomList) - 1:
-# 		print("Full coloring complete.")
-# 		goodActions = state.getActions()
-# 		print("Solution:", goodActions)
-# 		solutions.append(goodActions)
-# 		return []
-# 	for i in range(len(actions)):
-# 		print("i is", i)
-# 		if validChild(roomList[roomNum], actions[i]) == True:
-# 			print("valid")
-# 			#recurse here? want a child with the list of actions filled in so far
-# 			child = State(deepcopy(state.actions), [])
-# 			action = actions[i]
-# 			child.setAction(roomNum, action)
-# 			roomList[roomNum].setAction(actions)
-# 			state.addChild(child)
-# 		else:
-# 			print("It is a not valid to color", roomList[i].getName(), "with", actions[i])
-# 	state.printState()
-# 	for child in state.getChildren():
-# 		print("child:")
-# 		child.printState()
 	
 def validChild(room, action):
-	for neighbor in room.getNeighbors():
-		if neighbor.getAction() == action:
-			return False
-	return True
+	conflicts = [neighbor.getAction() for neighbor in room.getNeighbors()]
+	return action not in conflicts
 	
 def generateGraph():
 	w1 = Room("Warehouse 1")
@@ -153,7 +130,7 @@ class Room:
 	def setAction(self, action):
 		self.action = action
 
-class State:
+'''class State:
 	def __init__(self, actions, children):
 		self.actions = actions
 		self.children = children
@@ -178,7 +155,7 @@ class State:
 
 	def printState(self):
 		print("State actions:", self.actions)
-		print("State has", len(self.children), "children.")
+		print("State has", len(self.children), "children.")'''
 
 if __name__ == '__main__':
 	main()
