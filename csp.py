@@ -7,19 +7,38 @@ def main():
 	roomList = generateGraph()
 	actions = [i for i in range(numActions)]
 	bruteActions = bruteForce(actions, roomList)
-	mcvActions = mostConstrainingVariable(actions, roomList)
+	print("\n\n\nOPTIMIZATION\n\n\n")
+	mcvActions = runMcv(actions, roomList)
 	
 
 def runMcv(actions, roomList):
 	solutions = []
 	roomList.sort(key= lambda room: len(room.getNeighbors()), reverse=True)
-	return mostConstrainingVariable(actions, roomList, solutions)
+	print([room.getName() for room in roomList])
+	solution = mostConstrainingVariable(actions, roomList)
+	print("The state", solution, "is valid! Rejoice!")
+	iterations = getIterations(solution, actions)
+	printIterations(iterations, roomList)
 
-def mostConstrainingVariable(actions, roomList, solutions):
+def mostConstrainingVariable(actions, roomList):
 	print("wow that sure is constraining!")
+	solution = []
+	for room in roomList:
+		for action in actions:
+			if canAdd(action, solution, roomList):
+				room.setAction(action)
+				solution.append(action)
+				break
+		if room.getAction() == None:
+			print("fuk")
+	return solution
+
 
 def canAdd(action, state, roomList):
-	print("yes you can")
+	hypothetical = deepcopy(state)
+	hypothetical.append(action)
+	return isValid(hypothetical, roomList)
+
 #brute force solution: generate all 10-digit ternary numbers
 #turn them into arrays and check if each is valid
 def bruteForce(actions, roomList):
@@ -39,18 +58,22 @@ def bruteForce(actions, roomList):
 	goodStates = []
 	for state in allStates:
 		if isValid(state, roomList):
+			print("The state", state, "is valid! Rejoice!")
 			goodStates.append(state)
 	print("There are", len(goodStates), "valid solutions.")
 	for i in range(len(goodStates)):
 		print("\n-------------------- SOLUTION", i+1, "--------------------")
 		solution = goodStates[i]
-		mapping = {0:"pass", 1:"change temperature", 2:"change humidity"}
 		iterations = getIterations(solution, actions)
-		for i in range(len(iterations)):
-			print("ITERATION", i+1)
-			iteration = iterations[i]
-			for i in range(len(roomList)):
-				print("Heatmiser should", mapping.get(iteration[i]), "in room", roomList[i].getName())
+		printIterations(iterations, roomList)
+
+def printIterations(iterations, roomList):
+	mapping = {0:"pass", 1:"change temperature", 2:"change humidity"}
+	for i in range(len(iterations)):
+		print("ITERATION", i+1)
+		iteration = iterations[i]
+		for i in range(len(roomList)):
+			print("Heatmiser should", mapping.get(iteration[i]), "in room", roomList[i].getName())
 
 #goes through state, gets a color. gets the corresponding room in roomlist. 
 #makes sure none of the neighbors of that room have the same color in state
@@ -60,14 +83,13 @@ def isValid(state, roomList):
 		action = state[i]
 		room = stateRooms[i]
 		room.setAction(action)
-	for i in range(len(stateRooms)):
+	for i in range(len(state)):
 		room = stateRooms[i]
 		action = state[i]
 		neighbors = room.getNeighbors()
 		neighborActions = [neighbor.getAction() for neighbor in neighbors]
 		if action in neighborActions:
 			return False
-	print("The state", state, "is valid! Rejoice!")
 	return True
 
 #gets "equivalent" iterations for a state that will allow us to perform every action in every room
