@@ -14,14 +14,12 @@ def main():
 def runMcv(actions, roomList):
 	solutions = []
 	roomList.sort(key= lambda room: len(room.getNeighbors()), reverse=True)
-	print([room.getName() for room in roomList])
 	solution = mostConstrainingVariable(actions, roomList)
 	print("The state", solution, "is valid! Rejoice!")
 	iterations = getIterations(solution, actions)
 	printIterations(iterations, roomList)
 
 def mostConstrainingVariable(actions, roomList):
-	print("wow that sure is constraining!")
 	solution = []
 	for room in roomList:
 		for action in actions:
@@ -29,8 +27,6 @@ def mostConstrainingVariable(actions, roomList):
 				room.setAction(action)
 				solution.append(action)
 				break
-		if room.getAction() == None:
-			print("fuk")
 	return solution
 
 
@@ -103,10 +99,6 @@ def getIterations(state, actions):
 			state[i] = (action+1) % 3
 	return iterations
 	
-def validChild(room, action):
-	conflicts = [neighbor.getAction() for neighbor in room.getNeighbors()]
-	return action not in conflicts
-	
 def generateGraph():
 	w1 = Room("Warehouse 1")
 	w2 = Room("Warehouse 2")
@@ -151,33 +143,6 @@ class Room:
 
 	def setAction(self, action):
 		self.action = action
-
-'''class State:
-	def __init__(self, actions, children):
-		self.actions = actions
-		self.children = children
-
-	def getChildren(self):
-		return self.children
-
-	def getActions(self):
-		return self.actions
-
-	def setChildren(self, children):
-		self.children = children
-
-	def addChild(self, child):
-		self.children.append(child)
-
-	def setActions(self, actions):
-		self.actions = actions
-
-	def setAction(self, index, action):
-		self.actions[index] = action
-
-	def printState(self):
-		print("State actions:", self.actions)
-		print("State has", len(self.children), "children.")'''
 
 if __name__ == '__main__':
 	main()
